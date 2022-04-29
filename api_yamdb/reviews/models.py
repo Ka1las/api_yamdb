@@ -1,7 +1,38 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 User = get_user_model()
+
+
+class Genre(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True, max_length=50)
+
+    def __str__(self):
+        return self.name
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True, max_length=50)
+
+    def __str__(self):
+        return self.name
+
+
+class Title(models.Model):
+    name = models.CharField(max_length=200)
+    year = models.IntegerField()
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        blank=True
+    )
+    genre = models.ManyToManyField(
+        Genre,
+        blank=True
+    )
 
 
 class Review(models.Model):
@@ -15,7 +46,9 @@ class Review(models.Model):
         auto_now_add=True,
         db_index=True
     )
-    score = models.IntegerField()  # Дописать
+    score = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )  # Рвботает или нет?
 
     class Meta:
         ordering = ['pub_date', ]
