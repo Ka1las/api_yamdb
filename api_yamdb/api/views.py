@@ -1,13 +1,13 @@
 from django import views
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from requests import Response
 from rest_framework import mixins, viewsets, views, status
-
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import SlidingToken
 
 from .serializers import UserSerializer, TokenSerializer
+from .tokens import account_activation_token
 
 User = get_user_model()
 
@@ -23,7 +23,7 @@ class SignUpView(CreateViewSet):
     def perform_create(self, serializer):
         serializer.save()
         user = User.objects.get(username=serializer.data['username'])
-        confirmation_code = default_token_generator.make_token(user)
+        confirmation_code = account_activation_token.make_token(user)
         send_mail(
             'Код подтверждения',
             f'Ваш код: {confirmation_code}',
@@ -35,21 +35,19 @@ class SignUpView(CreateViewSet):
 class GetTokenView(views.APIView):
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
-        user = request.user
         if serializer.is_valid():
-            if default_token_generator.check_token(
+            username = serializer.validated_data['username']
+            user = User.objects.get(username=username)
+            if account_activation_token.check_token(
                 user, serializer.validated_data['confirmation_code']
             ):
-                token = SlidingToken.for_user(user)
-                user_data = [
-                    {
-                        "username": user.username,
-                        "token": token
-                    }
-                ]
-                serializer = TokenSerializer(user_data)
+                token = str(SlidingToken.for_user(user))
+                user_data = {
+                    "username": user.username,
+                    "token": token
+                }
                 return Response(
-                    serializer.data,
+                    user_data,
                     status=status.HTTP_200_OK
                 )
             return Response(
