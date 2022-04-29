@@ -1,7 +1,6 @@
 from django import views
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from requests import Response
 from rest_framework import mixins, viewsets, views, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import SlidingToken
