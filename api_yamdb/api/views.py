@@ -1,12 +1,15 @@
 from django import views
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from rest_framework import mixins, viewsets, views, status
+from rest_framework import mixins, viewsets, views, status, filters
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import SlidingToken
-
-from .serializers import UserSerializer, TokenSerializer
+from .serializers import UserSerializer, TokenSerializer, CategorySerializer, GenreSerializer, TitleSerializer
 from .tokens import account_activation_token
+from django_filters.rest_framework import DjangoFilterBackend
+from reviews.models import Category, Genre, Title
+from .permissions import AdminOrReadOnly
+
 
 User = get_user_model()
 
@@ -57,3 +60,34 @@ class GetTokenView(views.APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class ListDeleteCreateViewSet(mixins.ListModelMixin,
+                              mixins.DestroyModelMixin,
+                              mixins.CreateModelMixin,
+                              viewsets.GenericViewSet):
+    pass
+
+
+class GenreViewSet(ListDeleteCreateViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = [AdminOrReadOnly, ]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ('name',)
+
+
+class CategoryViewSet(ListDeleteCreateViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [AdminOrReadOnly, ]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ('name',)
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+    permission_classes = [AdminOrReadOnly, ]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('category', 'genre', 'name', 'year')
