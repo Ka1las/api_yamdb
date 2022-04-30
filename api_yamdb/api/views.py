@@ -1,15 +1,16 @@
 from django import views
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from rest_framework import mixins, viewsets, views, status, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, status, views, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import SlidingToken
-from .serializers import UserSerializer, TokenSerializer, CategorySerializer, GenreSerializer, TitleSerializer
-from .tokens import account_activation_token
-from django_filters.rest_framework import DjangoFilterBackend
-from reviews.models import Category, Genre, Title
-from .permissions import AdminOrReadOnly
 
+from .permissions import AdminOrReadOnly
+from .serializers import (CategorySerializer, GenreSerializer, TitleSerializer,
+                          TokenSerializer, UserSerializer)
+from .tokens import account_activation_token
+from reviews.models import Category, Genre, Title
 
 User = get_user_model()
 
