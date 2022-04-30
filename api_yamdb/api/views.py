@@ -1,4 +1,6 @@
 from django import views
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -43,7 +45,13 @@ class GetTokenView(views.APIView):
         serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data['username']
-            user = User.objects.get(username=username)
+            try:
+                user = get_object_or_404(User, username=username)
+            except Http404:
+                return Response(
+                    'Пользователя с таким username не существует',
+                    status=status.HTTP_404_NOT_FOUND
+                )
             if account_activation_token.check_token(
                 user, serializer.validated_data['confirmation_code']
             ):
