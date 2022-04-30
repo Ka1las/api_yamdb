@@ -42,7 +42,7 @@ class User(AbstractUser):
 
 
 class Genre(models.Model):
-    name = CharField(max_length=256)
+    name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
@@ -50,7 +50,7 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
-    name = CharField(max_length=256)
+    name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
@@ -58,7 +58,7 @@ class Category(models.Model):
 
 
 class Title(models.Model):
-    name = CharField(max_length=200)
+    name = models.CharField(max_length=200)
     year = models.IntegerField()
     description = models.TextField(null=True)
     genre = models.ManyToManyField(
