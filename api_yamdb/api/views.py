@@ -84,7 +84,7 @@ class ListDeleteCreateViewSet(mixins.ListModelMixin,
 class GenreViewSet(ListDeleteCreateViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [AdminOrReadOnly, ]
+    permission_classes = (AdminOrReadOnly, )
     filter_backends = [filters.SearchFilter]
     search_fields = ('name',)
 
@@ -92,7 +92,7 @@ class GenreViewSet(ListDeleteCreateViewSet):
 class CategoryViewSet(ListDeleteCreateViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [AdminOrReadOnly, ]
+    permission_classes = (AdminOrReadOnly, )
     filter_backends = [filters.SearchFilter]
     search_fields = ('name',)
 
@@ -100,7 +100,7 @@ class CategoryViewSet(ListDeleteCreateViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = [AdminOrReadOnly, ]
+    permission_classes = (AdminOrReadOnly, )
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
 
@@ -114,6 +114,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        print(title.reviews.order_by('id'))
         return title.reviews.order_by('id')
 
     def perform_create(self, serializer):
