@@ -29,6 +29,15 @@ class AuthorAdminModeratorPermission(BasePermission):
         )
 
 
+class IsSuperuser(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            if request.user.is_superuser:
+                return True
+            return False
+        return False
+
+
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         if request.user.is_authenticated:
