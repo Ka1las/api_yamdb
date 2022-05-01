@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.forms import CharField
 
 
 class User(AbstractUser):
@@ -68,8 +67,8 @@ class Title(models.Model):
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
-        null=True,
-        blank=True
+        blank=True,
+        null=True
     )
 
 

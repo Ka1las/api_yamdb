@@ -7,40 +7,47 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, mixins, permissions, status, views,
                             viewsets)
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import SlidingToken
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
+
 from reviews.models import Category, Genre, Review, Title
 
-from .permissions import AdminOrReadOnly, AuthorAdminModeratorPermission
+from .permissions import (AdminOrReadOnly, AuthorAdminModeratorPermission,
+                          IsAdmin, IsSuperuser)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer,
-                          TokenSerializer, UserSerializer)
+                          TokenSerializer, UserSignUpSerializer,
+                          UserSerializer)
 from .tokens import account_activation_token
 
 User = get_user_model()
 
 
-class CreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    pass
+class SignUpView(views.APIView):
+    permission_classes = [AllowAny, ]
 
-
-class SignUpView(CreateViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def perform_create(self, serializer):
-        serializer.save()
-        user = User.objects.get(username=serializer.data['username'])
-        confirmation_code = account_activation_token.make_token(user)
-        send_mail(
-            'Код подтверждения',
-            f'Ваш код: {confirmation_code}',
-            'signup@yamdb.com',
-            [user.email, ]
-        )
+    def post(self, request):
+        serializer = UserSignUpSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            user = User.objects.get(username=serializer.data['username'])
+            confirmation_code = account_activation_token.make_token(user)
+            send_mail(
+                'Код подтверждения',
+                f'Ваш код: {confirmation_code}',
+                'signup@yamdb.com',
+                [user.email, ]
+            )
+            return Response(serializer.data, status.HTTP_200_OK)
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
 class GetTokenView(views.APIView):
+    permission_classes = [AllowAny, ]
+
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():
@@ -55,7 +62,7 @@ class GetTokenView(views.APIView):
             if account_activation_token.check_token(
                 user, serializer.validated_data['confirmation_code']
             ):
-                token = str(SlidingToken.for_user(user))
+                token = str(AccessToken.for_user(user))
                 user_data = {
                     "username": user.username,
                     "token": token
@@ -70,6 +77,57 @@ class GetTokenView(views.APIView):
             )
         return Response(
             serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class UsersViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdmin | IsSuperuser]
+    lookup_field = 'username'
+    filter_backends = [filters.SearchFilter]
+    search_fields = ('username',)
+    pagination_class = PageNumberPagination
+
+    @action(
+        methods=['get'],
+        detail=False,
+        url_path='me',
+        permission_classes=[IsAuthenticated, ]
+    )
+    def get_user(self, request):
+        user = request.user
+        data = UserSerializer(user).data
+        return Response(data, status=status.HTTP_200_OK)
+
+    @get_user.mapping.patch
+    def patch_user(self, request):
+        user = request.user
+        serializer = UserSerializer(user, request.data, partial=True)
+        if serializer.is_valid():
+            if user.role == user.USER:
+                serializer.save(role=user.USER)
+            else:
+                serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            'Ошибка в передаваемых данных',
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    @action(
+        methods=['post'],
+        detail=False,
+        permission_classes=[IsAdmin | IsSuperuser, ]
+    )
+    def post_user(self, request):
+        serializer = UserSerializer(User, request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            'Ошибка в передаваемых данных',
             status=status.HTTP_400_BAD_REQUEST
         )
 
