@@ -31,20 +31,26 @@ class AuthorAdminModeratorPermission(BasePermission):
 
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
-        if request.user.role == User.ADMIN:
-            return True
+        if request.user.is_authenticated:
+            if request.user.role == User.ADMIN:
+                return True
+            return False
         return False
 
 
 class IsModerator(BasePermission):
     def has_permission(self, request, view):
-        if request.user.role == User.MODERATOR:
-            return True
+        if request.user.is_authenticated:
+            if request.user.role == User.MODERATOR:
+                return True
+            return False
         return False
 
 
 class IsUser(BasePermission):
     def has_permission(self, request, view):
-        if request.user.role == User.USER:
-            return True
+        if request.user.is_authenticated:
+            if request.user.role == User.USER:
+                return True
+            return False
         return False
