@@ -5,16 +5,21 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from requests import patch
 from rest_framework import (filters, mixins, permissions, status, views,
                             viewsets)
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import SlidingToken
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
 from reviews.models import Category, Genre, Review, Title
 
-from .permissions import AdminOrReadOnly, AuthorAdminModeratorPermission
+from .permissions import (AdminOrReadOnly, AuthorAdminModeratorPermission,
+                          IsAdmin, IsModerator, IsUser)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer,
-                          TokenSerializer, UserSerializer)
+                          TokenSerializer, UserSignUpSerializer, UserSerializer)
 from .tokens import account_activation_token
 
 User = get_user_model()
@@ -24,9 +29,10 @@ class CreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     pass
 
 
-class SignUpView(CreateViewSet):
+class SignUpViewSet(CreateViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserSignUpSerializer
+    permission_classes = [AllowAny, ]
 
     def perform_create(self, serializer):
         serializer.save()
@@ -41,6 +47,8 @@ class SignUpView(CreateViewSet):
 
 
 class GetTokenView(views.APIView):
+    permission_classes = [AllowAny, ]
+
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():
@@ -70,6 +78,35 @@ class GetTokenView(views.APIView):
             )
         return Response(
             serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class UsersViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdmin]
+    lookup_field = 'username'
+
+    @action(
+        methods=['get'],
+        detail=False,
+        url_path='me',
+        permission_classes=[IsAuthenticated])
+    def get_user(self, request):
+        user = request.user
+        data = UserSerializer(user).data
+        return Response(data, status=status.HTTP_200_OK)
+
+    @get_user.mapping.patch
+    def patch_user(self, request):
+        user = request.user
+        serializer = UserSerializer(user, request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            'Ошибка в передаваемых данных',
             status=status.HTTP_400_BAD_REQUEST
         )
 

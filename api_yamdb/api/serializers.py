@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
@@ -15,6 +15,27 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'username',
         )
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Недопустимый username!'
+            )
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
+        lookup_field = 'username'
 
 
 class TokenSerializer(serializers.Serializer):

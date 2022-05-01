@@ -1,4 +1,7 @@
+from django.contrib.auth import get_user_model
 from rest_framework.permissions import SAFE_METHODS, BasePermission
+
+User = get_user_model()
 
 
 class AdminOrReadOnly(BasePermission):
@@ -24,3 +27,24 @@ class AuthorAdminModeratorPermission(BasePermission):
                 request.user.is_moderator
             )
         )
+
+
+class IsAdmin(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.role == User.ADMIN:
+            return True
+        return False
+
+
+class IsModerator(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.role == User.MODERATOR:
+            return True
+        return False
+
+
+class IsUser(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.role == User.USER:
+            return True
+        return False
