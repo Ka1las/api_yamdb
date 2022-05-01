@@ -21,7 +21,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer,
                           TokenSerializer, UserSignUpSerializer,
                           UserSerializer)
-from .tokens import account_activation_token
+from .tokens import account_confirmation_token
 
 User = get_user_model()
 
@@ -34,7 +34,7 @@ class SignUpView(views.APIView):
         if serializer.is_valid():
             serializer.save()
             user = User.objects.get(username=serializer.data['username'])
-            confirmation_code = account_activation_token.make_token(user)
+            confirmation_code = account_confirmation_token.make_token(user)
             send_mail(
                 'Код подтверждения',
                 f'Ваш код: {confirmation_code}',
@@ -59,7 +59,7 @@ class GetTokenView(views.APIView):
                     'Пользователя с таким username не существует',
                     status=status.HTTP_404_NOT_FOUND
                 )
-            if account_activation_token.check_token(
+            if account_confirmation_token.check_token(
                 user, serializer.validated_data['confirmation_code']
             ):
                 token = str(AccessToken.for_user(user))
@@ -110,21 +110,6 @@ class UsersViewSet(viewsets.ModelViewSet):
                 serializer.save(role=user.USER)
             else:
                 serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(
-            'Ошибка в передаваемых данных',
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    @action(
-        methods=['post'],
-        detail=False,
-        permission_classes=[IsAdmin | IsSuperuser, ]
-    )
-    def post_user(self, request):
-        serializer = UserSerializer(User, request.data)
-        if serializer.is_valid():
-            serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(
             'Ошибка в передаваемых данных',
