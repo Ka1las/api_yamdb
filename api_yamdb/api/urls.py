@@ -1,6 +1,5 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (CategoryViewSet, GenreViewSet, GetTokenView, SignUpView,
                     TitleViewSet, CommentViewSet, ReviewViewSet, UsersViewSet)
@@ -8,9 +7,9 @@ from .views import (CategoryViewSet, GenreViewSet, GetTokenView, SignUpView,
 
 router = DefaultRouter()
 router.register(r'users', UsersViewSet, basename='users')
-router.register('categories', CategoryViewSet, basename='category')
-router.register('genres', GenreViewSet, basename='genre')
-router.register('titles', TitleViewSet, basename='title')
+router.register('categories', CategoryViewSet)
+router.register('genres', GenreViewSet)
+router.register('titles', TitleViewSet)
 router.register(
     r'title/(?P<title_id>[0-9]+)/reviews',
     ReviewViewSet,
