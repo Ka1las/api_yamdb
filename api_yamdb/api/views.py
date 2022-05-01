@@ -3,7 +3,6 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, mixins, permissions, status, views,
                             viewsets)
@@ -21,6 +20,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer,
                           TokenSerializer, UserSignUpSerializer,
                           UserSerializer)
+from django.db.models import Avg
 from .tokens import account_confirmation_token
 
 User = get_user_model()
@@ -129,7 +129,9 @@ class GenreViewSet(ListDeleteCreateViewSet):
     serializer_class = GenreSerializer
     permission_classes = (AdminOrReadOnly, )
     filter_backends = [filters.SearchFilter]
-    search_fields = ('name',)
+    search_fields = ('name', 'slug')
+    pagination_class = PageNumberPagination
+    lookup_field = 'slug'
 
 
 class CategoryViewSet(ListDeleteCreateViewSet):
@@ -137,15 +139,18 @@ class CategoryViewSet(ListDeleteCreateViewSet):
     serializer_class = CategorySerializer
     permission_classes = (AdminOrReadOnly, )
     filter_backends = [filters.SearchFilter]
-    search_fields = ('name',)
+    search_fields = ('name', 'slug')
+    pagination_class = PageNumberPagination
+    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(Avg('reviews__score'))
     serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly, )
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
+    pagination_class = PageNumberPagination
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

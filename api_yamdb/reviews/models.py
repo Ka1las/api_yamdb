@@ -45,7 +45,7 @@ class Genre(models.Model):
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Category(models.Model):
@@ -53,7 +53,7 @@ class Category(models.Model):
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Title(models.Model):
@@ -62,7 +62,6 @@ class Title(models.Model):
     description = models.TextField(null=True)
     genre = models.ManyToManyField(
         Genre,
-        blank=True
     )
     category = models.ForeignKey(
         Category,
@@ -70,6 +69,9 @@ class Title(models.Model):
         blank=True,
         null=True
     )
+
+    def __str__(self):
+        return self.name
 
 
 class Review(models.Model):
