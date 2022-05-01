@@ -1,26 +1,27 @@
 from django import views
-from django.http import Http404
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django.db.models import Avg
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, mixins, permissions, status, views,
                             viewsets)
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
-
 from reviews.models import Category, Genre, Review, Title
+
+from api.filters import TitleFilter
 
 from .permissions import (AdminOrReadOnly, AuthorAdminModeratorPermission,
                           IsAdmin, IsSuperuser)
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer, TitleSerializer,
-                          TokenSerializer, UserSignUpSerializer,
-                          UserSerializer)
-from django.db.models import Avg
+                          GenreSerializer, ReviewSerializer,
+                          TitleCreateAndUpdate, TitleGet, TokenSerializer,
+                          UserSerializer, UserSignUpSerializer)
 from .tokens import account_confirmation_token
 
 User = get_user_model()
@@ -146,11 +147,15 @@ class CategoryViewSet(ListDeleteCreateViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(Avg('reviews__score'))
-    serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly, )
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year')
     pagination_class = PageNumberPagination
+    filterset_class = TitleFilter
+    filter_backends = (DjangoFilterBackend,)
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'partial_update', 'destroy']:
+            return TitleCreateAndUpdate
+        return TitleGet
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

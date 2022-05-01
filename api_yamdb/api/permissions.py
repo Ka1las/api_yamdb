@@ -8,7 +8,8 @@ class AdminOrReadOnly(BasePermission):
 
     def has_permission(self, request, view):
         return (request.method in SAFE_METHODS) or (
-            request.user.is_authenticated and (request.user.role == User.ADMIN))
+            request.user.is_authenticated
+            and (request.user.role == User.ADMIN))
 
 
 class AuthorAdminModeratorPermission(BasePermission):

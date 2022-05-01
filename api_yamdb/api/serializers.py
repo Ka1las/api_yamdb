@@ -1,6 +1,4 @@
-from datetime import datetime
 from rest_framework import serializers
-from django.db.models import Avg
 from reviews.models import Category, Genre, Title, Comment, Review
 from django.contrib.auth import get_user_model
 
@@ -56,16 +54,6 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(read_only=True, many=True)
-    category = CategorySerializer(read_only=True)
-    rating = serializers.IntegerField(source='reviews__score__avg', read_only=True)
-
-    class Meta:
-        fields = '__all__'
-        model = Title
-
-
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field='username',
@@ -85,4 +73,35 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
+        fields = '__all__'
+
+
+class TitleGet(serializers.ModelSerializer):
+
+    category = CategorySerializer(many=False, read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+    rating = serializers.IntegerField(
+        source='reviews__score__avg',
+        read_only=True
+    )
+
+    class Meta:
+        model = Title
+        fields = '__all__'
+
+
+class TitleCreateAndUpdate(serializers.ModelSerializer):
+
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
+
+    class Meta:
+        model = Title
         fields = '__all__'
