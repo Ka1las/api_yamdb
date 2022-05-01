@@ -7,13 +7,10 @@ User = get_user_model()
 class AdminOrReadOnly(BasePermission):
 
     def has_permission(self, request, view):
-        return (
-            request.method in SAFE_METHODS
-            or request.user.is_authenticated
-        )
+        return request.method in SAFE_METHODS
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_admin
+        return request.user.role == User.ADMIN
 
 
 class AuthorAdminModeratorPermission(BasePermission):
