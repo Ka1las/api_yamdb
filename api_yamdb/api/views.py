@@ -1,4 +1,3 @@
-from api.filters import TitleFilter
 from django import views
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -22,6 +21,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           TitleCreateAndUpdate, TitleGet, TokenSerializer,
                           UserSerializer, UserSignUpSerializer)
 from .tokens import account_confirmation_token
+from .filters import TitleFilter
 
 User = get_user_model()
 
@@ -145,11 +145,12 @@ class CategoryViewSet(ListDeleteCreateViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().annotate(Avg('reviews__score'))
+    TitleObjects = Title.objects.all()
+    queryset = TitleObjects.annotate(Avg('reviews__score')).order_by('name')
     permission_classes = (AdminOrReadOnly, )
     pagination_class = PageNumberPagination
     filterset_class = TitleFilter
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, )
 
     def get_serializer_class(self):
         if self.action in ['create', 'partial_update', 'destroy']:
