@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Comment, Genre, Review, Title
 
+from .filters import TitleFilter
 from .permissions import (AdminOrReadOnly, AuthorAdminModeratorPermission,
                           IsAdmin, IsSuperuser)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -21,7 +22,6 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           TitleCreateAndUpdate, TitleGet, TokenSerializer,
                           UserSerializer, UserSignUpSerializer)
 from .tokens import account_confirmation_token
-from .filters import TitleFilter
 
 User = get_user_model()
 
