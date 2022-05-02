@@ -5,13 +5,14 @@ from django.db.models import Avg
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (filters, mixins, permissions, status, views,
-                            viewsets)
+from rest_framework import (filters, mixins, status, views, viewsets)
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+
 from reviews.models import Category, Comment, Genre, Review, Title
 
 from .filters import TitleFilter
@@ -84,9 +85,9 @@ class GetTokenView(views.APIView):
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdmin | IsSuperuser]
+    permission_classes = [IsAdmin | IsSuperuser, ]
     lookup_field = 'username'
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, ]
     search_fields = ('username',)
     pagination_class = PageNumberPagination
 
@@ -98,8 +99,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     )
     def get_user(self, request):
         user = request.user
-        data = UserSerializer(user).data
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
 
     @get_user.mapping.patch
     def patch_user(self, request):
@@ -127,8 +127,8 @@ class ListDeleteCreateViewSet(mixins.ListModelMixin,
 class GenreViewSet(ListDeleteCreateViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (AdminOrReadOnly, )
-    filter_backends = [filters.SearchFilter]
+    permission_classes = [AdminOrReadOnly, ]
+    filter_backends = [filters.SearchFilter, ]
     search_fields = ('name', 'slug')
     pagination_class = PageNumberPagination
     lookup_field = 'slug'
@@ -137,8 +137,8 @@ class GenreViewSet(ListDeleteCreateViewSet):
 class CategoryViewSet(ListDeleteCreateViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (AdminOrReadOnly, )
-    filter_backends = [filters.SearchFilter]
+    permission_classes = [AdminOrReadOnly, ]
+    filter_backends = [filters.SearchFilter, ]
     search_fields = ('name', 'slug')
     pagination_class = PageNumberPagination
     lookup_field = 'slug'
@@ -147,10 +147,10 @@ class CategoryViewSet(ListDeleteCreateViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     TitleObjects = Title.objects.all()
     queryset = TitleObjects.annotate(Avg('reviews__score')).order_by('name')
-    permission_classes = (AdminOrReadOnly, )
+    permission_classes = [AdminOrReadOnly, ]
     pagination_class = PageNumberPagination
     filterset_class = TitleFilter
-    filter_backends = (DjangoFilterBackend, )
+    filter_backends = [DjangoFilterBackend, ]
 
     def get_serializer_class(self):
         if self.action in ['create', 'partial_update', 'destroy']:
@@ -160,10 +160,10 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (
+    permission_classes = [
         AuthorAdminModeratorPermission,
-        permissions.IsAuthenticatedOrReadOnly
-    )
+        IsAuthenticatedOrReadOnly,
+    ]
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
@@ -178,10 +178,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (
+    permission_classes = [
         AuthorAdminModeratorPermission,
-        permissions.IsAuthenticatedOrReadOnly
-    )
+        IsAuthenticatedOrReadOnly,
+    ]
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
