@@ -29,6 +29,7 @@ class User(AbstractUser):
     )
 
     class Meta:
+        ordering = ['role', ]
         constraints = [
             models.UniqueConstraint(
                 fields=[
@@ -45,7 +46,10 @@ class Genre(models.Model):
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
-        return self.slug
+        return self.name
+
+    class Meta:
+        ordering = ['name', ]
 
 
 class Category(models.Model):
@@ -53,7 +57,10 @@ class Category(models.Model):
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
-        return self.slug
+        return self.name
+
+    class Meta:
+        ordering = ['name', ]
 
 
 class Title(models.Model):
@@ -62,22 +69,23 @@ class Title(models.Model):
     description = models.TextField(null=True)
     genre = models.ManyToManyField(
         Genre,
+        blank=True
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
-        blank=True,
-        null=True
+        null=True,
+        blank=True
     )
 
-    def __str__(self):
-        return self.name
+    class Meta:
+        ordering = ['name', ]
 
 
 class Review(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
-    titles = models.ForeignKey(
+    title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews')
     text = models.TextField()
     pub_date = models.DateTimeField(
@@ -87,10 +95,19 @@ class Review(models.Model):
     )
     score = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
-    )  # Рвботает или нет?
+    )
 
     class Meta:
         ordering = ['pub_date', ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    'author',
+                    'title'
+                ],
+                name='unique_author'
+            )
+        ]
 
     def __str__(self):
         return self.text

@@ -18,44 +18,32 @@ class AuthorAdminModeratorPermission(BasePermission):
             obj.author == request.user or (
                 request.user.is_superuser
             ) or (
-                request.user.is_admin
+                request.user.role == User.ADMIN
             ) or (
-                request.user.is_moderator
+                request.user.role == User.MODERATOR
             )
         )
 
 
 class IsSuperuser(BasePermission):
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.user.is_superuser:
-                return True
-            return False
-        return False
+        return request.user.is_authenticated and request.user.is_superuser
 
 
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.user.role == User.ADMIN:
-                return True
-            return False
-        return False
+        return request.user.is_authenticated and (
+            request.user.role == User.ADMIN
+        )
 
 
 class IsModerator(BasePermission):
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.user.role == User.MODERATOR:
-                return True
-            return False
-        return False
+        return request.user.is_authenticated and (
+            request.user.role == User.MODERATOR
+        )
 
 
 class IsUser(BasePermission):
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.user.role == User.USER:
-                return True
-            return False
-        return False
+        return request.user.is_authenticated and request.user.role == User.USER
