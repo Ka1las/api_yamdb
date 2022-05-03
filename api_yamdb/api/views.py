@@ -5,23 +5,37 @@ from django.db.models import Avg
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (filters, mixins, status, views, viewsets)
+from rest_framework import filters, mixins, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Comment, Genre, Review, Title
 
 from .filters import TitleFilter
-from .permissions import (AdminOrReadOnly, AuthorAdminModeratorPermission,
-                          IsAdmin, IsSuperuser)
-from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer,
-                          TitleCreateAndUpdate, TitleGet, TokenSerializer,
-                          UserSerializer, UserSignUpSerializer)
+from .permissions import (
+    AdminOrReadOnly,
+    AuthorAdminModeratorPermission,
+    IsAdmin,
+    IsSuperuser
+)
+from .serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    GenreSerializer,
+    ReviewSerializer,
+    TitleCreateAndUpdate,
+    TitleGet,
+    TokenSerializer,
+    UserSerializer,
+    UserSignUpSerializer
+)
 from .tokens import account_confirmation_token
 
 User = get_user_model()
@@ -65,8 +79,8 @@ class GetTokenView(views.APIView):
             ):
                 token = str(AccessToken.for_user(user))
                 user_data = {
-                    "username": user.username,
-                    "token": token
+                    'username': user.username,
+                    'token': token
                 }
                 return Response(
                     user_data,
@@ -117,10 +131,12 @@ class UsersViewSet(viewsets.ModelViewSet):
         )
 
 
-class ListDeleteCreateViewSet(mixins.ListModelMixin,
-                              mixins.DestroyModelMixin,
-                              mixins.CreateModelMixin,
-                              viewsets.GenericViewSet):
+class ListDeleteCreateViewSet(
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
     pass
 
 
