@@ -42,6 +42,14 @@ class User(AbstractUser):
             )
         ]
 
+    @property
+    def is_admin(self):
+        return self.role == User.ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == User.MODERATOR
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
