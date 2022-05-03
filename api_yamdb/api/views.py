@@ -16,7 +16,8 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Genre, Review, Title
+from api_yamdb.settings import DEFAULT_FROM_EMAIL
 
 from .filters import TitleFilter
 from .permissions import (
@@ -51,10 +52,10 @@ class SignUpView(views.APIView):
             user = User.objects.get(username=serializer.data['username'])
             confirmation_code = account_confirmation_token.make_token(user)
             send_mail(
-                'Код подтверждения',
-                f'Ваш код: {confirmation_code}',
-                'signup@yamdb.com',
-                [user.email, ]
+                subject='Код подтверждения',
+                message=f'Ваш код: {confirmation_code}',
+                from_email=DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email, ]
             )
             return Response(serializer.data, status.HTTP_200_OK)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
@@ -106,29 +107,26 @@ class UsersViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
     @action(
-        methods=['get'],
+        methods=['GET', 'PATCH'],
         detail=False,
         url_path='me',
         permission_classes=[IsAuthenticated, ]
     )
-    def get_user(self, request):
+    def user_me(self, request):
         user = request.user
-        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
-
-    @get_user.mapping.patch
-    def patch_user(self, request):
-        user = request.user
-        serializer = UserSerializer(user, request.data, partial=True)
-        if serializer.is_valid():
+        if request.method == 'GET':
+            return Response(
+                UserSerializer(user).data,
+                status=status.HTTP_200_OK
+            )
+        if request.method == 'PATCH':
+            serializer = UserSerializer(user, request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
             if user.role == user.USER:
                 serializer.save(role=user.USER)
             else:
                 serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(
-            'Ошибка в передаваемых данных',
-            status=status.HTTP_400_BAD_REQUEST
-        )
 
 
 class ListDeleteCreateViewSet(
@@ -205,7 +203,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get('review_id')
         review = get_object_or_404(Review, id=review_id, title=title)
         return review.comments.all()
-        
+
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
         title = get_object_or_404(Title, id=title_id)
