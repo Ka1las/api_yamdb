@@ -19,6 +19,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title
 from api_yamdb.settings import DEFAULT_FROM_EMAIL
 
+
 from .filters import TitleFilter
 from .permissions import (
     AdminOrReadOnly,
@@ -122,7 +123,7 @@ class UsersViewSet(viewsets.ModelViewSet):
         if request.method == 'PATCH':
             serializer = UserSerializer(user, request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            if user.role == user.USER:
+            if user.is_user:
                 serializer.save(role=user.USER)
             else:
                 serializer.save()

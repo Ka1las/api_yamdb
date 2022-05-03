@@ -34,6 +34,18 @@ class User(AbstractUser):
     class Meta:
         ordering = ['role', ]
 
+    @property
+    def is_user(self):
+        return self.role == User.USER
+
+    @property
+    def is_moderator(self):
+        return self.role == User.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == User.ADMIN
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
