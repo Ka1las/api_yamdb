@@ -5,6 +5,7 @@ from django.db.models import Avg
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth.tokens import default_token_generator
 from rest_framework import filters, mixins, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -38,7 +39,6 @@ from .serializers import (
     UserSerializer,
     UserSignUpSerializer
 )
-from .tokens import account_confirmation_token
 
 User = get_user_model()
 
@@ -51,7 +51,7 @@ class SignUpView(views.APIView):
         if serializer.is_valid():
             serializer.save()
             user = User.objects.get(username=serializer.data['username'])
-            confirmation_code = account_confirmation_token.make_token(user)
+            confirmation_code = default_token_generator.make_token(user)
             send_mail(
                 subject='Код подтверждения',
                 message=f'Ваш код: {confirmation_code}',
@@ -76,7 +76,7 @@ class GetTokenView(views.APIView):
                     'Пользователя с таким username не существует',
                     status=status.HTTP_404_NOT_FOUND
                 )
-            if account_confirmation_token.check_token(
+            if default_token_generator.check_token(
                 user, serializer.validated_data['confirmation_code']
             ):
                 token = str(AccessToken.for_user(user))
