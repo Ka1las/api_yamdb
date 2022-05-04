@@ -1,4 +1,5 @@
 from django import views
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -18,7 +19,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title
-from django.conf import settings
 
 
 from .filters import TitleFilter
@@ -121,11 +121,10 @@ class UsersViewSet(viewsets.ModelViewSet):
                 UserSerializer(user).data,
                 status=status.HTTP_200_OK
             )
-        if request.method == 'PATCH':
-            serializer = UserMeSerializer(user, request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = UserMeSerializer(user, request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ListDeleteCreateViewSet(
