@@ -18,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title
-from api_yamdb.settings import DEFAULT_FROM_EMAIL
+from django.conf import settings
 
 
 from .filters import TitleFilter
@@ -37,6 +37,7 @@ from .serializers import (
     TitleGet,
     TokenSerializer,
     UserSerializer,
+    UserMeSerializer,
     UserSignUpSerializer
 )
 
@@ -55,7 +56,7 @@ class SignUpView(views.APIView):
             send_mail(
                 subject='Код подтверждения',
                 message=f'Ваш код: {confirmation_code}',
-                from_email=DEFAULT_FROM_EMAIL,
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email, ]
             )
             return Response(serializer.data, status.HTTP_200_OK)
@@ -121,12 +122,9 @@ class UsersViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_200_OK
             )
         if request.method == 'PATCH':
-            serializer = UserSerializer(user, request.data, partial=True)
+            serializer = UserMeSerializer(user, request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            if user.is_user:
-                serializer.save(role=user.USER)
-            else:
-                serializer.save()
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 

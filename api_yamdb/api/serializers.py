@@ -38,6 +38,12 @@ class UserSerializer(serializers.ModelSerializer):
         lookup_field = 'username'
 
 
+class UserMeSerializer(UserSerializer):
+
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role', )
+
+
 class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(max_length=150)
